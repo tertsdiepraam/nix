@@ -181,6 +181,14 @@ pub struct Termios {
     pub local_flags: LocalFlags,
     /// Control characters (see `termios.c_cc` documentation)
     pub control_chars: [libc::cc_t; NCCS],
+    /// Line number (see `termios.c_line` documentation)
+    #[cfg(any(
+        target_os = "linux",
+        target_os = "android",
+        target_os = "haiku",
+        target_is = "redox",
+    ))]
+    pub line: libc::cc_t,
 }
 
 impl Termios {
@@ -214,6 +222,7 @@ impl Termios {
             termios.c_cflag = self.control_flags.bits();
             termios.c_lflag = self.local_flags.bits();
             termios.c_cc = self.control_chars;
+            termios.c_line = self.line;
         }
         self.inner.as_ptr()
     }
@@ -226,6 +235,7 @@ impl Termios {
         self.control_flags = ControlFlags::from_bits_truncate(termios.c_cflag);
         self.local_flags = LocalFlags::from_bits_truncate(termios.c_lflag);
         self.control_chars = termios.c_cc;
+        self.line = termios.c_line;
     }
 }
 
@@ -238,6 +248,7 @@ impl From<libc::termios> for Termios {
             control_flags: ControlFlags::from_bits_truncate(termios.c_cflag),
             local_flags: LocalFlags::from_bits_truncate(termios.c_lflag),
             control_chars: termios.c_cc,
+            line: termios.c_line,
         }
     }
 }
